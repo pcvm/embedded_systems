@@ -1,0 +1,15 @@
+https://hci.rwth-aachen.de/arduino
+
+
+Arduino in a Nutshell
+
+
+Downloaded over 80,000 times!
+
+The Arduino is a family of microcontroller boards to simplify electronic design, prototyping and experimenting for artists, hackers, hobbyists, but also many professionals.
+
+This little booklet, written by Prof. Jan Borchers, introduces you to using an Arduino. It comes with shopping tips and a SparkFun online wish list to get the parts you'll need.
+
+Book size is 8 x 6 inches. Print at original size (100% scale!) onto larger paper and cut to size outside the cropmarks on the cover. The size is also perfect for reading on an iPad.
+
+The latest version is 1.13, from Jun 26, 2015. It covers the latest beginner-friendly board, the Arduino Uno R3, and the latest version of the Arduino IDE at that time, 1.6.5. See the last page in the book for a version history.

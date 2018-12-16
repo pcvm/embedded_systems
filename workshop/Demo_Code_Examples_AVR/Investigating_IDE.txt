@@ -1,0 +1,22 @@
+It is interesting to get an indea of the IO and chip support in the Arduino
+platform and related clones. Try these shell commands which assume
+applications are installed in paths such as /Applications/Arduino.app/ and
+/Applications/Energia.app/ (adjust for your unix or unix-like environment).
+
+For Arduino (on OS-X):
+
+  find /Applications/Arduino.app/ -name io.h
+  more /Applications/Arduino.app//Contents/Java/hardware/tools/avr/avr/include/avr/io.h
+  ls -l /Applications/Arduino.app/Contents/Java/hardware/tools/avr/avr/include/avr/ | more
+  ls -l /Applications/Arduino.app/Contents/Java/hardware/tools/avr/avr/include/avr/ | grep 328
+  more /Applications/Arduino.app/Contents/Java/hardware/tools/avr/avr/include/avr/iom328p.h
+
+For Energia (on OS-X):
+
+  find /Applications/Energia.app/ -name io.h
+  more /Applications/Energia.app//Contents/Resources/Java/hardware/tools/msp430/msp430/include/io.h
+  more /Applications/Energia.app//Contents/Resources/Java/hardware/tools/msp430/msp430/include/msp430.h
+
+Note: when displaying include file iom328p.h, notice how all manner of
+      important chip parameters are described e.g interrupt vectors, port
+      address and port bit names, etc.

@@ -1,0 +1,4 @@
+  lcd.begin(nCOLS,nROWS);			// activate LCD module
+  lcd.setBacklightPin(BACKLIGHT_PIN,POSITIVE);
+  lcd.setBacklight(HIGH);
+  delay(100);

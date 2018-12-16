@@ -1,0 +1,25 @@
+https://www.handsonresearch.org/2012/PDF/IntroductionToArduino.pdf
+
+-------------------------------------------------------
+
+INTRODUCTION TO THE ARDUINO MICROCONTROLLER
+
+Hands-on Research in Complex Systems
+Shanghai Jiao Tong University
+June 17 – 29, 2012
+
+Instructor: Thomas E. Murphy (University of Maryland)
+
+Assisted by: Hien Dao (UMD), Caitlin Williams (UMD) and 徐浩 (SJTU)
+
+-------------------------------------------------------
+
+Prof. Thomas E. Murphy, Hien Dao, and Caitlin Williams (University of Maryland) and Hao Xu (Shanghai Jioa Tong University)
+
+Digital microprocessor systems are ubiquitous in consumer electronics today, and are found in automobiles, computers, embedded systemts, handheld devices, and smart sensors. In this sesison, participants will learn some simple techniques for programming and controllingg a simple microcontroller board, the Arduino.
+
+Introduction to the Arduino micro-controller
+Fritzing (software for drawing circuits)     http://fritzing.org/
+Arduino software (currently version 1.0.1)   http://arduino.cc./
+
+-------------------------------------------------------

@@ -1,0 +1,12 @@
+* A Temperature and Humidity Thing 
+  - A basic web server providing hygrometer and temperature results from an AM2302 sensor.
+  - Using NodeMCU https://github.com/nodemcu/nodemcu-devkit-v1.0, Adafruit DHT-sensor-library for DHT22/AM2302, and NodeMCU ESP-12 Development Kit.
+  - References
+     - from https://learn.adafruit.com/dht/connecting-to-a-dhtxx-sensor, the AM2302 is a wired version of the DHT22
+     - at https://www.adafruit.com/product/393:
+       - "AM2302 is a wired version of the DHT22"
+       - has a 5.1K resistor pullup connecting VCC and DATA so external pullup not needed
+       - connect pin 1 to 3.3V, pin 2 to GPIO 17, pin3 is NC, and pin 4 is GND
+     - top view with mounting surface facing down and bolt hole upper:
+       - pins 1234 are left to right as VCC, DATA, NC, GND
+  - Before use, enter wifi info for nw_ssid and nw_passwd, rebuild and upload to target hardware.

@@ -1,0 +1,104 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1348\cocoasubrtf170
+{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\f0\b\fs24 \cf0 From arduinoPath/include/avr/iom328p.h\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+
+\b0 \cf0 \
+\
+/* Registers and associated bit numbers */\
+\
+#define PINB _SFR_IO8(0x03)\
+#define PINB0 0\
+#define PINB1 1\
+#define PINB2 2\
+#define PINB3 3\
+#define PINB4 4\
+#define PINB5 5\
+#define PINB6 6\
+#define PINB7 7\
+\
+#define DDRB _SFR_IO8(0x04)\
+#define DDB0 0\
+#define DDB1 1\
+#define DDB2 2\
+#define DDB3 3\
+#define DDB4 4\
+#define DDB5 5\
+#define DDB6 6\
+#define DDB7 7\
+\
+#define PORTB _SFR_IO8(0x05)\
+#define PORTB0 0\
+#define PORTB1 1\
+#define PORTB2 2\
+#define PORTB3 3\
+#define PORTB4 4\
+#define PORTB5 5\
+#define PORTB6 6\
+#define PORTB7 7\
+\
+#Define PINC _SFR_IO8(0x06)\
+#define PINC0 0\
+#define PINC1 1\
+#define PINC2 2\
+~~~ cut ~~~\
+/* Interrupt Vectors */\
+/* Interrupt Vector 0 is the reset vector. */\
+\
+#define INT0_vect_num     1\
+#define INT0_vect         _VECTOR(1)   /* External Interrupt Request 0 */\
+\
+#define INT1_vect_num     2\
+#define INT1_vect         _VECTOR(2)   /* External Interrupt Request 1 */\
+\
+#define PCINT0_vect_num   3\
+#define PCINT0_vect       _VECTOR(3)   /* Pin Change Interrupt Request 0 */\
+\
+#define PCINT1_vect_num   4\
+#define PCINT1_vect       _VECTOR(4)   /* Pin Change Interrupt Request 0 */\
+\
+#define PCINT2_vect_num   5\
+#define PCINT2_vect       _VECTOR(5)   /* Pin Change Interrupt Request 1 */\
+\
+#define WDT_vect_num      6\
+#define WDT_vect          _VECTOR(6)   /* Watchdog Time-out Interrupt */\
+\
+#define TIMER2_COMPA_vect_num 7\
+#define TIMER2_COMPA_vect _VECTOR(7)   /* Timer/Counter2 Compare Match A */\
+\
+#define TIMER2_COMPB_vect_num 8\
+#define TIMER2_COMPB_vect _VECTOR(8)   /* Timer/Counter2 Compare Match A */\
+\
+#define TIMER2_OVF_vect_num   9\
+#define TIMER2_OVF_vect   _VECTOR(9)   /* Timer/Counter2 Overflow */\
+\
+#define TIMER1_CAPT_vect_num  10\
+#define TIMER1_CAPT_vect  _VECTOR(10)  /* Timer/Counter1 Capture Event */\
+\
+#define TIMER1_COMPA_vect_num 11\
+\
+\
+
+\b From arduinoPath/include/avr/sfr_defs.h
+\b0 \
+\
+#define _MMIO_BYTE(mem_addr) (*(volatile uint8_t *)(mem_addr))\
+#define _MMIO_WORD(mem_addr) (*(volatile uint16_t *)(mem_addr))\
+#define _MMIO_DWORD(mem_addr) (*(volatile uint32_t *)(mem_addr))\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 ~~~ cut ~~~\
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural
+\cf0 #define _SFR_MEM8(mem_addr) (mem_addr)\
+#define _SFR_MEM16(mem_addr) (mem_addr)\
+#define _SFR_MEM32(mem_addr) (mem_addr)\
+#define _SFR_IO8(io_addr) ((io_addr) + __SFR_OFFSET)\
+#define _SFR_IO16(io_addr) ((io_addr) + __SFR_OFFSET)\
+\
+#define _SFR_IO_ADDR(sfr) ((sfr) - __SFR_OFFSET)\
+#define _SFR_MEM_ADDR(sfr) (sfr)\
+#define _SFR_IO_REG_P(sfr) ((sfr) < 0x40 + __SFR_OFFSET)\
+}

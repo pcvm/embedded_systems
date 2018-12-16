@@ -1,0 +1,37 @@
+http://www.introtoarduino.com/
+
+
+
+
+Introduction to Arduino:
+
+A Piece of Cake
+
+by Alan Smith
+
+Download PDF - Free
+Buy hard copy
+Download Software
+pcd8544 image gen
+Parts List
+
+This is a small site to go along with the book Introduction to Microcontrollers.
+
+If you are interested in buying this book for a class, please e-mail me at alan [at] introtoarduino [dot] com with the number of copies you need for a lower price. (minimum order 10 copies)
+This book is different than many Arduino books in that it expects no previous knowledge in electronics or programming. Instead of going into depth teaching those topics, it teaches only enough so that you can make things.
+
+
+In this book, you will:
+
+Use lights to quickly learn basic programming concepts
+Make noise and music on a speaker
+Make a digital thermometer
+Add graphics to your thermometer to show a graph of recorded temperature
+Play with sensors to detect light, magnets, and knocking
+Make a rubber band gun that uses a joystick for panning, tilting, and firing
+Be encouraged to go create your own projects!
+There are exercises after each chapter to help you make sure you understand the concepts.
+
+About the author:
+
+Alan Smith has been programming since 1981 when he was introduced to BASIC on the Vic 20 by his father. He currently works for Qualcomm as an engineering manager and loves to excite students about engineering. He lives in Cary, NC with his wonderful wife, four children, and a crazy cat.

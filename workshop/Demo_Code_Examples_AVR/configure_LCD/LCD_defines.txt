@@ -1,0 +1,24 @@
+///////////////////////////////////////////////////////////////////////////
+#include <Wire.h>	// access I2C
+#include <LCD.h>	// and LCD
+#include <LiquidCrystal_I2C.h>
+
+// Specify LCD geometry and optionally choose "fat" digits
+#define nCOLS           20
+#define nROWS            4
+
+// Instantiate I2C connected LCD at backpack address 0x27
+// - this is like 4-bit mode for standard LiquidCrystal described at
+//     https://www.arduino.cc/en/Reference/LiquidCrystalConstructor
+//   but with extra arguments defining I2C port address and E pin number
+// - the address = base address 0x20 + least significant 3 bits set by user
+#define BACKLIGHT_PIN  3
+#define En_pin  2
+#define Rw_pin  1		// Note that these pin numbers refer
+#define Rs_pin  0		// to connections between the LCD
+#define D4_pin  4		// backpack PCF8574 chip and the LCD
+#define D5_pin  5
+#define D6_pin  6
+#define D7_pin  7
+
+LiquidCrystal_I2C  lcd(0x27,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
