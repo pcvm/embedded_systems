@@ -1,6 +1,6 @@
 # embedded_systems
 
-This work and play relates to some small personal projects and also my teaching in the area of embedded systems.
+This work and play relates to some small personal projects and also my teaching in the area of embedded systems. Initial commits were in 2016 but all files reloaded in Dec-2018.
 
 * esp8266_clock_thing
   - A sequence of files that grow to form a digital clock using a 4 char 8x8 LED dot matrix display and a 4x20 LCD module, with NTP time sync and temperature display.
