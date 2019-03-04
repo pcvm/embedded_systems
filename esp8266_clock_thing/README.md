@@ -12,7 +12,8 @@ An exploratory sequence of programs eventually produced a time-of-day clock demo
    - Unused source code: code to drive 4 SPI connected 8x8 LED arrays is a work in progress.
 
 * Phillip_Clock_Thing2_12.ino
-   - This is realise 11 but with an extra config mechanism of using the serial port at startup.
+   - This is release 11 but with an alternative system setup mechanism via the serial port. At boot time, the serial port is initialised to 115200 bits/second and all busses and peripherals are configured with progress messages. If the system is booting up for the first time or with the push button switch pressed to select setup, then a message is issued asking if the serial port should be used for setup. The user has 2 seconds in which to respond and if desired, can enter WiFi and time zone details (otherwise setup will use the usual access point WiFi mode and web page at http://192.168.4.1).
+   - All files were removed and then uploaded again.
 
 * src/
    - The current clock resulted from the sequence of source code files (in src/).
