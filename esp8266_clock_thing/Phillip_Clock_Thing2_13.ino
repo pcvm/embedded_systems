@@ -38,10 +38,10 @@
  *  1 What works, what doesn't -- https://github.com/esp8266/Arduino/blob/master/doc/reference.md
  *  2 The display uses newLiquidCrystal from https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/Home
  *    and some general details are available from
- *    http://tronixstuff.com/2014/09/24/tutorial-serial-pcf8574-backpacks-hd44780-compatible-lcd-modules-arduino/
- *    Download June2019=> https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewLiquidCrystal_1.5.1.zip
+ *    https://tronixlabs.com.au/news/tutorial-serial-i2c-backpack-for-hd44780compatible-lcd-modules-with-arduino/.
+ *    Download June2019=> https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewLiquidCrystal_1.5.1.zip.
  *    Install=> unzip into your libraries area and then rename its directory to LiquidCrystal i.e. it
- *              is visible in a directory with a name like ~/Documents/Arduino/libraries/LiquidCrystal
+ *              is visible in a directory with a name like ~/Documents/Arduino/libraries/LiquidCrystal.
  *  3 http://www.switchdoc.com/2015/10/iot-esp8266-timer-tutorial-arduino-ide/
  *  4 Ntp access was inspired by https://github.com/Nurgak/Electricity-usage-monitor (example) but then I read
  *    the NTPClient-Arduino example.

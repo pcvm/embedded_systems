@@ -2,6 +2,8 @@
 
 An exploratory sequence of programs eventually produced a time-of-day clock demo featuring NTP synchronisation and WiFi access point configuration. These files grew from a code sample set for an embedded systems workshop that changed from Atmel AVR processors to the ESP8266 platform in 2015-2017. The main display for time is an Adafruit I2C connected 4 digit LED, and an additional I2C connected 4x20 LCD can show time as well as optional temperature and humidity (plus status/debug info). The clock works just fine with only an LED display.
 
+My blog page for "Phillip's Clock Thing" gives a general introduction at https://pmusumeci.blogspot.com/p/ntp-locked-clock.html including a link to the current user manual :-)
+
 * Phillip_Clock_Thing2_11.ino
    - On the first power up, the system creates an open WiFi access point with a name starting as ClockThing and a configuration web page at URL http://192.168.4.1 so that you can enter config data for WiFi SSID and WiFi password, and time zone (as an hours difference relative to UTC/GMT e.g. 10 for north eastern Australia). An optional IP number for a local time server may also be entered e.g. 192.168.1.2 (usually ignored but might be useful if you want your local systems all using say a common openntpd server). After entering all details, touch the Submit button and then power the clock off and then on. At subsequent starts, the system connects to an NTP server and starts time keeping.
    - How to re-enter local settings: with the push button switch pressed and held, do a power up and wait until the LED shows "ConF" (that is LED-speak for "Config") and then release the push button. As done on the first power up, set your mobile phone to connect to the WiFi access point with a name starting as ClockThing and then visit URL http://192.168.4.1. Fill in the details and touch Submit.
@@ -27,10 +29,10 @@ An exploratory sequence of programs eventually produced a time-of-day clock demo
    - 1 What works, what doesn't -- https://github.com/esp8266/Arduino/blob/master/doc/reference.md
    - 2 The display uses newLiquidCrystal from https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/Home
        and some general details are available from
-       http://tronixstuff.com/2014/09/24/tutorial-serial-pcf8574-backpacks-hd44780-compatible-lcd-modules-arduino/
-       Download June2019=> https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewLiquidCrystal_1.5.1.zip
+       https://tronixlabs.com.au/news/tutorial-serial-i2c-backpack-for-hd44780compatible-lcd-modules-with-arduino/.
+       Download June2019=> https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads/NewLiquidCrystal_1.5.1.zip.
        Install=> unzip into your libraries area and then rename its directory to LiquidCrystal i.e. it
-                 is visible in a directory with a name like ~/Documents/Arduino/libraries/LiquidCrystal
+                 is visible in a directory with a name like ~/Documents/Arduino/libraries/LiquidCrystal.
    - 3 http://www.switchdoc.com/2015/10/iot-esp8266-timer-tutorial-arduino-ide/
    - 4 Ntp access was inspired by https://github.com/Nurgak/Electricity-usage-monitor (example) but then I read
        the NTPClient-Arduino example.
