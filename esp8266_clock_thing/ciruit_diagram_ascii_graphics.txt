@@ -1,0 +1,101 @@
+//  THE HARDWARE USED HERE
+//  
+//  1a Plan view of circuit using a NodeMCU v1.0 module with builtin USB adapter for development host link
+//
+//     Note: the pull up/down resistors can be 10K (marked as XXX below).
+//     Note: the AdaFruit LED interface takes +5V power (pin Vin) and +3.3V as the IO high threshold,
+//           and the LCD backpack takes +5V power.
+//
+//     NodeMCU orientation: plan view is with esp8266 & antenna at top, and usb connector at bottom.
+//
+//             o---------------------------------------------------------------o 3.3V
+//             |                                                               |
+//             |   Summer Time                                                 o Resync
+//             |  \ {toggle}       _______________                              \ {push button}
+//        3.3V o-o o-XXX-o--------o ADC0   GPIO16 o----------------------------o
+//             |     10K |        o NC     GPIO5  o---i2c_SCL--->[]            |
+//             |         |        o NC     GPIO4  o---i2c_SDA--->[] Adafruit   |
+//             |         |    SD3 o GPIO10 GPIO0  o       GND--->[] 7segment   |
+//             |         |    SD2 o GPIO9  GPIO2  o       +5V--->[] backpack   |
+//             |         |    SD1 o MOSI     3.3V o------------->[]            |
+//             |         |    CND o CS        GND o------------------------XXX-o
+//             |         |    SD0 o MISO   GPIO14 o----------HSPICLK       10K
+//             |         |    CLK o SCLK   GPIO12 o----------HSPIQ
+//             |     10K o-XXX----o GND    GPIO13 o---RXD2---HSPID
+//             o------------------o 3.3V   GPIO15 o---TXD2---HSPICS
+//                                o EN     GPIO3  o---RXD0
+//                                o RST    GPIO1  o---TXD0
+//         I2C      []<-----------o GND       GND o
+//         4x20     []<-----------o Vin      3.3V o
+//         LCD      []<---i2c SDA  ---x--===--x---     left x == USER switch
+//         backpack []<---i2c SCL        usb          right x == FLASH switch
+//                                    connector
+//                                    for power
+//                                  & programming
+////
+//  1b Plan view of circuit using an ESP-12 e or f device on an electrodragon white daughterboard
+//     with a FTDI-232RL type usb-uart adapter setup in 3.3V mode, and connected as described in
+//     Figure "ESP to Serial" at https://github.com/esp8266/Arduino/blob/master/doc/boards.md
+//
+//     NOTE: the circuit at https://github.com/esp8266/Arduino/blob/master/doc/ESP_to_serial.png
+//           shows direct connection between the 3.3V supply from the USB-uart interface and the
+//           3.3V from the ESP8266 board - you should keep these supplies separate (unless your
+//           USB-uart power source really is strong enough to drive everything).
+//     NOTE: The ESP-12E module on a WHITE daughterboard (0.1" pinouts) has the 3.3V regulator
+//           installed on the underside and (very important) the middle bridging 0-Ohm resistor
+//           removed on top. See
+//           http://www.electrodragon.com/product/esp8266-smd-adapter-board-wi07-12/
+//     NOTE: The WHITE daughterboard has R1 and R3 of Figure "ESP to Serial" already installed,
+//           so pay careful attention to adding R2 and R4 as noted below:
+//
+//     ESP-12 orientation: plan view with Vcc at lower left and GND at lower right
+//
+//        FTDI-RTS & add R4=10K    ___________
+//        pullup to 3.3V....RESET o           o GPIO1/RX....FTDI-TX   (top right)
+//                            adc o           o GPIO3/TX....FTDI-RX
+//        (R1 pullup on LHS) CHPD o           o gpio5/I2C_scl
+//        theButton........GPIO16 o           o gpio4/I2C_sda
+//                 gpio14/SPI_sck o           o GPIO0.......FTDI-DTR & add R2=10K pullup to 3.3V
+//                gpio12/SPI_miso o           o gpio2.......DHT11 temp&humidity sensor or One-Wire
+//                gpio13/SPI_mosi o           o gpio15/SPI_ss (R3 pulldown on RHS)
+//        +ve power supply....VCC o           o GND.........FTDI GND & power supply GND
+//                                 -----------
+//                               [R1] [0Ohm] [R3]
+//                                      ^--- remove this 0Ohm bridge if using the 3.3V reg
+//  
+//  2  The PCF8574T I2C io expander can be soldered directly on to the LCD module if the optional
+//     16x2 or 20x4 LCD is used, although it really is easier to just buy the LCD with its I2C
+//     adapter.  See for example
+//       https://www.google.com/search?q=I2C+LCD+20x4
+//
+//  3  An Adafruit 7-segment LED backpack which is based on the HT16K33 driver chip, or a separate
+//     HT16K33 break-out board soldered to your 7-segment display).  See for example
+//       https://www.google.com/search?q=HT16K33+break-out+board
+//       NOTE: The HT16K33 also supports an extensive keyboard decode capability which is not
+//             used here but worth noting if more user input is needed.
+//
+//  4  A 4 element 8x8 LED array cascaded on an SPI bus, using the max7219 driver chip.
+//       NOTE: This display option needs further work so it can use fast DMA transfers.
+//  
+//  THE SOFTWARE USED HERE
+//  
+//  1  As noted earlier, control of the display on the I2C "LCD backpack" makes use of
+//     NewliquidCrystal_*.zip from https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads
+//     to _replace_ the default library LiquidCrystal. Earlier versions such as 1.3.4 required
+//     some changes so that the esp8266 development tools could use NewliquidCrystal but when
+//     tried again with versions 1.5.x, everything works as-is after unzipping.
+//     NOTE only relevant for versions before 1.5.x:  
+//           the esp8266 compiler chain fails on SR (shift register) and Software protocol variants
+//           of NewliquidCrystal so just remove or rename files matching {*_SR*, SI2C*, *_SI2C*}.
+//           In sh, enter:  for x in *_SR* SI2C* *_SI2C* ; do echo $x ; mv ${x} ${x}_disabled ; done
+//  
+//  2  The ESP8266 environment provides extern C functions to specify a timer interrupt function
+//     to call back when a software based timeout occurs. This uses an os_timer_t data structure
+//     that is specified via os_timer_setfn() which also specifies the user call back. The timer
+//     interrupt interval is set by a call to os_timer_arm() which in this example sets the timer
+//     mode to continuous operation.
+//  
+//  3  Pin allocations are documented at
+//           http://www.esp8266.com/wiki/doku.php?id=esp8266_gpio_pin_allocations
+//           Booting up in a (default) UART-enabled mode: GPIO1==uart-TX, GPIO3==uart-RX.
+// 

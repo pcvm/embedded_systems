@@ -25,6 +25,9 @@ My blog page for "Phillip's Clock Thing" gives a general introduction at https:/
 * src/
    - The current clock resulted from the sequence of source code files (in src/).
 
+* ciruit_diagram_ascii_graphics.txt shows the basic wiring for an LED module
+   - generated via command "src/get_circuit_from_source_code_file.sh > ciruit_diagram_ascii_graphics.txt"
+
 * A growing set of references at the top of the source file sequence indicates where ideas (and libraries) came from i.e.
    - 1 What works, what doesn't -- https://github.com/esp8266/Arduino/blob/master/doc/reference.md
    - 2 The display uses newLiquidCrystal from https://bitbucket.org/fmalpartida/new-liquidcrystal/wiki/Home

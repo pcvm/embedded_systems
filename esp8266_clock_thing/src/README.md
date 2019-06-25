@@ -28,6 +28,8 @@
 * file esp8266_I2C_LCD_timerIRQ_ntp_ap_nv_dotm_DHT_ui.ino
   - adding a one button switch user interface.
 
+* file get_circuit_from_source_code_file.sh does as it says on the v13 source code
+
 ---------------------------------------------------------------------------
 
 PROGRAMMING ENVIRONMENT
