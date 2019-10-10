@@ -1800,8 +1800,19 @@ void loop() {
 #if defined( use_DotMatrix_DISPLAY )
         LedCont_reset();                            // ((reset LED to allow for driver error clear))
 #endif
-        while (digitalRead(theButton) == HIGH)      // debounce wait
+	unsigned char esc_cnt=0;
+#define asc_ESCAPE  27  // <esc>
+	Serial.println("\n\nPress <esc> 4 times with reset button pressed to re-enter setup...\n\n");
+        while (digitalRead(theButton) == HIGH) {    // debounce wait
           delay(0);                                 //               on button release
+	  if ((Serial.available() > 0) && (asc_ESCAPE == Serial.read())) esc_cnt++;
+	  if (esc_cnt >= 4) {
+	    display_7seg_str4(0,"WiFi");
+	    Serial.println("Selection: enter new wifi parameters\n\n");
+	    lock_system_mode = doing_config_using_uart;
+	    reconfigure_system_via_serial_port();
+	  }
+	}
         set_clock_part1();                          // trigger clock resync phases
         return;                                     //               as last action of "loop"
       }
