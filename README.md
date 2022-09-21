@@ -7,7 +7,7 @@ This work and play relates to some small personal projects and also my teaching 
   - Developed as an aid for an embedded systems workshop.
 
 * esp8266_clock_thing2
-  - Latest clock source code plus user information
+  - Latest clock source code plus user information. Some code for a https server is not used (lack of CPU power).
   - The whole project has grown far beyond any initial plans and, even though code has been split into separate files to preserve some sanity, it really needs a major refacture (or rewrite). In defence, some of the display hardware and even software to decode NTP responses did not exist in the beginning. An option to input time from a GPS receiver is the next change...
 
 * emonTx_energy_monitor
