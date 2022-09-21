@@ -6,6 +6,9 @@ This work and play relates to some small personal projects and also my teaching 
   - A sequence of files that grow to form a digital clock using a 4 char 8x8 LED dot matrix display and a 4x20 LCD module, with NTP time sync and temperature display.
   - Developed as an aid for an embedded systems workshop.
 
+* esp8266_clock_thing2
+  - Latest clock source code plus user information
+
 * emonTx_energy_monitor
   - A fork of the Atmel AVR control program for the open energy monitor (from 2016).
   - This minimalist system has been frozen as I want to change the hardware.
