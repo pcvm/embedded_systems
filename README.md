@@ -8,6 +8,7 @@ This work and play relates to some small personal projects and also my teaching 
 
 * esp8266_clock_thing2
   - Latest clock source code plus user information
+  - The whole project has grown far beyond any initial plans and, even though code has been split into separate files to preserve some sanity, it really needs a major refacture (or rewrite). In defence, some of the display hardware and even software to decode NTP responses did not exist in the beginning
 
 * emonTx_energy_monitor
   - A fork of the Atmel AVR control program for the open energy monitor (from 2016).
