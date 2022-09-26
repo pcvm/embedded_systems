@@ -8,7 +8,7 @@
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-#define ThisRelease "2022 r40"
+#define ThisRelease "2022 r41"
 
 #include "notes_01_overview.h"	/* user notes */
 #include "notes_10_developer.h"	/* circuit diagrams (ascii graphics) and software development notes */
@@ -1294,10 +1294,11 @@ void set_clock_part2() {
 void setup() {
   timer_IRQ_handling_active = 0;
 
-  for (int i=0; i<WIFI_parms_size; i++)
-    ssid_Cstr[i] = pass_Cstr[i] = 0;
-  for (int i=0; i<MISC_parms_size; i++)
-    misc_bytes[i] = 0;
+  for (int i=0; i<WIFI_parms_size; i++)		// clear ram copies of config data (before retrieval of EEPROM values)
+    ssid_Cstr[i] = pass_Cstr[i] = 0;		// . wifi config
+  for (int i=0; i<MISC_parms_size; i++)		// . options
+    misc_bytes[i] = 0;				//
+  the_time_zone = DefaultTimeZone;		// . time zone TZ
 
   io_set_to_serial();				// start in Serial comms mode
 
@@ -1311,7 +1312,7 @@ void setup() {
 
   // Handle system transitions (typically unused so undefined)
   SPECIAL_WELCOME
-  retrieve_clk_config(bequiet);			// retrieve config in case some wiring options known
+  retrieve_clk_config(bequiet);			// retrieve clock config (set up wifi/options/TZ/pb wiring from EEPROM)
 
   while (Serial.available() > 0) Serial.read();	//   flush serial input prior to possible read
 
@@ -1319,7 +1320,6 @@ void setup() {
   Serial.println(String("  GPIO10=")+String(digitalRead(10))+String(", GPIO16=")+String(digitalRead(16))+String(", ADC=")+String(analogRead(0)));
   // tests show that the pushbutton reads GPIOnn==0 if circuit connected i.e. pulldown resistor present
 
-  the_time_zone = DefaultTimeZone;
   update_summer_time(bequiet);			//   (GPIO default mode is input so pin read is OK)
 
 						// 2 initialise I2C
