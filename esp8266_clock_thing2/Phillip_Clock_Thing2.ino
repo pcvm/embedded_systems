@@ -8,16 +8,16 @@
 
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-#define ThisRelease "2022 r41"
+#define ThisRelease "2022 r42"
 
 #include "notes_01_overview.h"	/* user notes */
 #include "notes_10_developer.h"	/* circuit diagrams (ascii graphics) and software development notes */
 
 /*
  *   Compile time options:
- *     . use_LED_DISPLAY              -> usually enabled
+ *     . use_LED_DISPLAY              -> almost always enabled
  *     . useDHTsensor useDS1820sensor -> DS1820 usually enabled
- *     . useAnalogueTickTock          -> enabled if external hardware needs a time signal
+ *     . useAnalogueTickTock          -> only enabled if generating time sync. for external hardware
  *
  *   Run time options:
  *     . with use_LED_DISPLAY enabled, the variable led_display_is is usually set to
@@ -61,7 +61,7 @@
 #define TempMethod " "
 #endif
 
-#define useAnalogueTickTock	// 1	// enable/disable analogue clock output pulse
+//#define useAnalogueTickTock	1	// enable/disable analogue clock output pulse
 // PIN ASSIGNMENT
 #define CLK_TICK_OUTPUT		10	// Note: gpio10 is a fallback alternative PB if gpio16 input damaged
 
@@ -1507,7 +1507,9 @@ void loop() {
 							// events but they are slow anyway
 
       clock_colon = 1 & (~clock_colon);			// update colon boolean
+#if defined( useAnalogueTickTock )
       digitalWrite( CLK_TICK_OUTPUT, clock_colon );
+#endif
 							// handle user sync request or
 							// system reconfig via push button
       if (read_pb_input()==ButtonActive) {
