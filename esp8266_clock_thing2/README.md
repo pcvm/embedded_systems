@@ -2,7 +2,7 @@
 
 This is a time-of-day clock demo featuring NTP synchronisation and WiFi access point configuration. It grew (unfortunately) from a code sample set for an embedded systems workshop that changed from Atmel AVR processors to the ESP8266 platform in 2015-2017. The main display for time is an Adafruit I2C connected 4 digit LED, and an additional I2C connected 4x20 LCD can show time as well as optional temperature and humidity (plus status/debug info). The clock works fine with only an LED display but can also handle 4x 8x8 dot matrix displays, and now supports reference time sources { NTP, GPS }.
 
-My blog page for "Phillip's Clock Thing" gives a general introduction at https://pmusumeci.blogspot.com/p/ntp-locked-clock.html and a user guide
+My blog page for "Phillip's Clock Thing" gives a general introduction at https://pmusumeci.blogspot.com/p/ntp-locked-clock.html and links to a user guide
 
 * Phillip_Clock_Thing2.ino
    - main source code
