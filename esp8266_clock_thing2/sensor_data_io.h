@@ -22,9 +22,9 @@ char* get_temperature() { return latest_ds_temperature; }
 //   - applies a hard -ve limit so result is >-100
 void update_ds_temperature() {
   DS18B20.requestTemperatures();
-  delay(0);
+  delay(1);
   float temp = DS18B20.getTempCByIndex(0);
-  delay(0);
+  delay(1);
 
   if (temp <= -100) {
     strncpy(latest_ds_temperature, "?", 2);
@@ -39,7 +39,7 @@ void ow_setup() {
   for (int i = 0; i < nCharsTemp; i++)
     latest_ds_temperature[i] = 0;
 
-  clear_lcd_row(3);             // clear screen and storage
+  lcd_clear_row(3);             // clear screen and storage
   allPrint("Current Temp=");
   DS18B20.begin();
   update_ds_temperature();
@@ -95,17 +95,17 @@ char* get_humidity()    { return latest_humidity; }
 char* get_temperature() { return latest_temperature; }
 //
 void update_humidity() {
-  delay(0);
+  delay(1);
   float h = dht.readHumidity();
-  delay(0);
+  delay(1);
 
   String x = String(h);
   strncpy(latest_humidity, x.c_str(), nCharsResult - 1);
 }
 void update_temperature() {
-  delay(0);
+  delay(1);
   float t = dht.readTemperature();
-  delay(0);
+  delay(1);
 
   String x = String(t);
   strncpy(latest_temperature, x.c_str(), nCharsResult - 1);

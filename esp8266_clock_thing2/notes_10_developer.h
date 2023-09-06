@@ -68,11 +68,12 @@
 //  THE HARDWARE USED HERE
 //  
 //  1a Plan view of circuit using a NodeMCU v1.0 module with builtin USB adapter for development host link
-//     (the circuit uses UART control lines to manage the reset and download control)
+//     (the circuit uses UART control lines to manage the reset and download control).
 //
-//     Note: the pull up/down resistors can be 10K (marked as XXX below).
+//     NOTE: this is the recommended board because the dev host has full control of downloading and reset.
+//     NOTE: the pull up/down resistors can be 10K (marked as XXX below).
 //           Some esp8266 boards have had GPIO16 LEAKAGE current issues requiring a 1K (noted below).
-//     Note: the AdaFruit LED interface takes +5V power (pin Vin) and +3.3V as the IO high threshold,
+//     NOTE: the AdaFruit LED interface takes +5V power (pin Vin) and +3.3V as the IO high threshold,
 //           and the LCD backpack takes +5V power.
 //
 //     NodeMCU orientation: plan view is with esp8266 & antenna at top, and usb connector at bottom.
@@ -86,9 +87,9 @@
 //            |         |         o NC     GPIO4  o D2---i2c_SDA->[] Adafruit   | NOTE ON GPIO16 LEAKAGE:
 //  ________> |         | D12-SD3 o GPIO10 GPIO0  o D3       GND->[] 7seg I2C   |  /If system constantly
 //  GPIO10 is |         | D11-SD2 o GPIO9  GPIO2  o D4       +5V->[] backpack   | / enters "Conf" mode,
-//  optional  |         |     SD1 o MOSI     3.3V o-------------->[]        10K |/  try a 1K in // to 10K
-//  PB in or  |         |     CND o CS        GND o-------------------------XXX-o   between GND and GPIO16
-//  analogue  |         |     SD0 o MISO   GPIO14 o D5------HspiCLK->() SCK
+//  opt. GPS  |         |     SD1 o MOSI     3.3V o-------------->[]        10K |/  try a 1K in // to 10K
+//  or PB in  |         |     CND o CS        GND o-------------------------XXX-o   between GND and GPIO16
+//  or anal.  |         |     SD0 o MISO   GPIO14 o D5------HspiCLK->() SCK
 //  clock     |         |     CLK o SCLK   GPIO12 o D6------HspiQ                 SPI dot matrix display
 //  pulse out |     10K o-XXX-----o GND    GPIO13 o D7-RXD2-HspiD--->() MOSI      (can use +5Vdc levels)
 //            o-------------------o 3.3V   GPIO15 o D8-TXD2-HspiCS-->() SS
@@ -104,19 +105,17 @@
 ////
 //  1b Plan view of circuit using an ESP-12 e or f device on an electrodragon white daughterboard
 //     with a FTDI-232RL type usb-uart adapter setup in 3.3V mode, and connected as described in
-//     Figure "ESP to Serial" at https://github.com/esp8266/Arduino/blob/master/doc/boards.md
-//     (no push button switches)
+//     Figure "ESP to Serial" https://github.com/esp8266/Arduino/blob/master/doc/ESP_to_serial.png
+//                       from https://github.com/esp8266/Arduino/tree/master/doc
+//     and featuring no push button switches.  Previous copy is at
+//     web.archive.org/web/20170507042752/https://github.com/esp8266/Arduino/blob/master/doc/boards.md
 //
-//     NOTE: the circuit at https://github.com/esp8266/Arduino/blob/master/doc/ESP_to_serial.png
-//           shows direct connection between the 3.3V supply from the USB-uart interface and the
-//           3.3V from the ESP8266 board - you should keep these supplies separate (unless your
-//           USB-uart power source really is strong enough to drive everything).
+//     NOTE: This has serious boot-out-of-reset issues so is not recommended, and has R2 & R4 missing.
+//     NOTE: The circuit at ESP_to_serial.png shows separate 3.3V supplies connected between the
+//           USB-uart interface and the ESP8266 3.3V. This should be avoided.
 //     NOTE: The ESP-12E module on a WHITE daughterboard (0.1" pinouts) has the 3.3V regulator
-//           installed on the underside and (very important) the middle bridging 0-Ohm resistor
-//           removed on top. See
-//           https://www.electrodragon.com/product/esp8266-smd-adapter-board-wi07-12/
-//     NOTE: The WHITE daughterboard has R1 and R3 of Figure "ESP to Serial" already installed,
-//           so pay careful attention to adding R2 and R4 as noted below:
+//           installed on the underside so (very important) ensure the top-side bridging link is
+//           removed on https://www.electrodragon.com/product/esp8266-smd-adapter-board-wi07-12/
 //
 //     ESP-12 orientation: plan view with Vcc at lower left and GND at lower right
 //
@@ -126,7 +125,7 @@
 //        (R1 pullup on LHS) CHPD o           o gpio5/I2C_scl
 //        theButton........GPIO16 o           o gpio4/I2C_sda
 //                 gpio14/SPI_sck o           o GPIO0.......FTDI-DTR & add R2=10K pullup to 3.3V
-//                gpio12/SPI_miso o           o gpio2.......DHT11 temp&humidity sensor or One-Wire
+//                gpio12/SPI_miso o           o gpio2.......DHT11 temp&humidity sensor or One-Wire or GPS
 //                gpio13/SPI_mosi o           o gpio15/SPI_ss (R3 pulldown on RHS)
 //        +ve power supply....VCC o           o GND.........FTDI GND & power supply GND
 //                                 -----------
@@ -144,7 +143,7 @@
 //                             EN o ( 3) (20) o gpio5 D1 i2c_SCL
 //        theButton........GPIO16 o ( 4) (19) o gpio4 D2 i2c_SDA
 //            gpio14 D5 Hspi sclk o ( 5) (18) o GPIO0 D3 .......DTR with 10K pullup to 3.3V (host control)
-//            gpio12 D6 Hspi miso o ( 6) (17) o gpio2 D4 .......DHT11 temp&humidity sensor or One-Wire
+//            gpio12 D6 Hspi miso o ( 6) (17) o gpio2 D4 .......DHT11 temp&humidity sensor or One-Wire or GPS
 //            gpio13 D7 Hspi mosi o ( 7) (16) o gpio15 D8-TXD2 Hspi CS
 //        +ve DC input........VCC o ( 8) (15) o GND.............GND
 //                           CS0  o ( 9) (14) o  SCLK
@@ -226,5 +225,20 @@
 // r33. better status updates on LED dot matrix, additional code reorganisation
 // r33. improve message timing at boot, add user cmd echo to DotMatrix display, remove help on display
 //      brightness change commands (while they work, a time update on a display resets the brightness)
+// r43. switch to use of wifiMulti to now also provide recovery wifi AP at ("localnet", "pass1234")
+// r44. add softSerial support for reading time from a NEO-8M-001 GPS receiver, using gpio2
+
+// 2023: restarted revision numbering at 1
+// r1.  implemented GPS time source (as an alternative to NTP)
+// r2.  manage internet access as necessary (NTP use) or optional (GPS use) so network setup is optional,
+//      further code cleanup by having attribute/option setting/getting/definitions etc. in main .ino file,
+//      improve GPS time sync by waiting for a change in seconds to ensure fractional seconds = 0, and do a
+//      similar change for NTP time sync for consistency (but note that network latency is not addressed)
+// r3.  added a message to dot-matrix display during system startup to say if it is not going to be active
+//      (at least user then knows why time not visible), made L[01] config found in eeprom be maintained
+//      after a system reconfigure (unless user specifically changes it)
+// r4.  no code change but libraries updated and executable rebuilt (with r4 tag)
+// r5.  Phillip_Clock_Thing2.ino now sets WiFi.setPhyMode(WIFI_PHY_MODE_11G) in order to avoid any 5GHz
+//      wifi network that shares an SSID with a 2.4GHz wifi network (very important)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////

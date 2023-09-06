@@ -8,17 +8,30 @@
 // . wifi password
 // . timezone offset char and then optional text tokens separated by a ' ' char
 //
-// Note: Some recent clocks have been produced with different display modules
+// Note: . Some recent clocks have been produced with different display modules
 //       so there is now a need to retain details of what is the main display
 //       to drive. As loss of this data could leave a clock without an active
 //       display, the config read function retrieve_clk_config() makes a note if
-//       these details have been ever saved and the config write function
-//       save_clk_config() will ensure that current display details are saved if
-//       the user forgets to specify display settings. Display details are
-//       "sticky".
+//       these details have ever been saved and the config write function
+//       save_clk_config() will ensure that current display details are retained
+//       if the user does not specify display settings. The relevant variable
+//       is eeprom_config_selected_LED, and it is updated whenever config info
+//       is read.
+//       . Some even more recent clocks have a GPS time source option. The web
+//       config has to explicitly turn this option off or on when configuring
+//       (if that is what the user wants), otherwise the previous settings are
+//       retained.
+//       . The GPS and LED choices aim to be persistent but respect user choice.
+
+void mx_configure( int, int );	// eeprom info allows display driver choices
 
 const int len_parm_string=31;
 char tmp_hs[1+len_parm_string];	// (static storage for working copy of server name)
+
+// Keep track of whether the system configuration is selecting a specific LED display
+// (if a choice is read from eeprom config, we will ensure a choice is saved later)
+bool eeprom_config_selected_LED = false;
+int  eeprom_config_selected_LED_arg = -1;
 
 //
 // Simple config bytes dump for humans to read
@@ -95,7 +108,7 @@ bool retrieve_clk_config( unsigned char rc_verbose ) {
   //   either a value byte or null terminated string
   while ((option_index>0) && (option_index<MISC_parms_size)) {
     char * tmp;
-    delay(0);
+    delay(1);					// system call to support its real-time activities
     if ((rc_verbose!=0)&&(misc_bytes[option_index]>=' '))
       console->printf( "    index=%d, record type: %c\n\r", (int) option_index, (char) misc_bytes[option_index] );
 
@@ -148,19 +161,35 @@ bool retrieve_clk_config( unsigned char rc_verbose ) {
       break;
 
     case id_LED_select:
-      led_display_is = (1 & misc_bytes[option_index++])==0 ? using_7seg_led : using_dots_led;
+      eeprom_config_selected_LED = true;				// note that this system has managed LED choice
+      system_switch_to_selected_led( misc_bytes[option_index++] );
+      if ( is_system_using_dots_led() ) {
+	if ( (misc_bytes[option_index]>='0') && (misc_bytes[option_index]<='9') )
+	  eeprom_config_selected_LED_arg=misc_bytes[option_index++]-'0';// instantiate the chosen array driver setup
+	else
+	  eeprom_config_selected_LED_arg=-1;				// or instantiate the default
+	mx_configure( eeprom_config_selected_LED_arg, rc_verbose );
+      }
 							// (leave option_index pointing to next id)
-      setup_manages_LED = true;				// note that this system has a managed choice of LED
       if (rc_verbose!=0)
-        console->printf( "    > LED display is using %s\n\r", (led_display_is==0)?"7-segment LED":"dot matrix LED array" );
+        console->printf( "    > LED display is using %s\n\r", (is_system_using_7seg_led())?"7-segment LED":"dot matrix LED array" );
       option_index++;
       break;
 
     case id_HOURS_mode:
-      HOURS_mode_is  = (1 & misc_bytes[option_index++])==0 ? using_24HOUR_display : using_12HOUR_display;
+      system_switch_to_selected_HOURS_mode( misc_bytes[option_index++] );
 							// (leave option_index pointing to next id)
       if (rc_verbose!=0)
-        console->printf( "    > Hours display mode is %s hour mode\n\r", (HOURS_mode_is==0)?"24":"12" );
+        console->printf( "    > Hours display mode is %s hour mode\n\r", ( is_system_using_24HOUR_display() )?"24":"12" );
+      option_index++;
+      break;
+
+    case id_GPS_time:
+      system_switch_to_selected_time_source( misc_bytes[option_index++] );
+							// (leave option_index pointing to next id)
+      update_internet_access_needs();			// note if this system does NOT need internet access
+      if (rc_verbose!=0)
+        console->printf( "    > Master time sync source is %s\n\r", ( is_system_using_NTP_source() )?"NTP":"GPS" );
       option_index++;
       break;
 
@@ -176,17 +205,17 @@ bool retrieve_clk_config( unsigned char rc_verbose ) {
 
   if (rc_verbose==0) return true;
 
-  clear_lcd_row(0);
+  lcd_clear_row(0);
   allPrintln("Decoding config");
 
   DelSec( 1 );
   String x = String(" (") + ssid_Cstr + ')';
-  clear_lcd_row(0); allPrintln((char*) x.c_str());
+  lcd_clear_row(0); allPrintln((char*) x.c_str());
 
   x = String(" (") + pass_Cstr + ')';
-  clear_lcd_row(1); allPrintln((char*) x.c_str());
+  lcd_clear_row(1); allPrintln((char*) x.c_str());
 
-  clear_lcd_row(2); allPrint(" (UTC/GMT ");
+  lcd_clear_row(2); allPrint(" (UTC/GMT ");
   if (the_time_zone > 0)  allPrint("+");
   if (the_time_zone != 0) allPrintN(the_time_zone);
   if (optional_time_server!=0) {
@@ -201,7 +230,7 @@ bool retrieve_clk_config( unsigned char rc_verbose ) {
     allPrint(String(get_pb_gpio_id())+"]");
   }
 
-  clear_lcd_row(3);
+  lcd_clear_row(3);
   allPrint(" [OTA=");
   allPrint(OTA_server_name);
   allPrint(":");
@@ -220,6 +249,7 @@ bool retrieve_clk_config( unsigned char rc_verbose ) {
 //
 void save_clk_config(char *s, char *p, signed char ttz, char *multiple_option_tokens, int verbose) {
   String tmp_options;
+
   EEPROM.begin(EEPROM_nBytesUsed);
   delay(10);
 
@@ -232,25 +262,22 @@ void save_clk_config(char *s, char *p, signed char ttz, char *multiple_option_to
   console->println();
 
   // If the LED display choice is managed, ensure that the new multiple_option_tokens also sets a value
-  if (setup_manages_LED) {
-    // ---> is managed
-    char* ptr2_id_LED_select = index( multiple_option_tokens, id_LED_select);
-    if (ptr2_id_LED_select == NULL) {
-      // -> is managed but current options neglect to include a setting
-      //    . need to append an L<value> item to multiple_option_tokens with
-      //      <value> representing led_display_is
-      tmp_options = String(multiple_option_tokens) + "L" + char('0' + (int) led_display_is) + " ";
-      console->println("Updated options to include display info");
-      multiple_option_tokens = (char*) tmp_options.c_str();
-      console->println(multiple_option_tokens);
-      console->println();
-    }
+  if ( eeprom_config_selected_LED &&					// is managed by eeprom config AND
+       (NULL == index( multiple_option_tokens, id_LED_select)) ) {	// no LED config info included so
+									// look up original details and append
+    // <space char><id_LED_select char><LED_select char><optional orientation char used by some dot matrix><space char>
+    tmp_options = String(multiple_option_tokens) + " " + char( id_LED_select ) + char( get_selected_led_as_ASCII() );
+    if (eeprom_config_selected_LED_arg >= 0) tmp_options += char( eeprom_config_selected_LED_arg + '0' );
+    console->println("Updating options: include display info");
+    multiple_option_tokens = (char*) tmp_options.c_str();
+    console->println(multiple_option_tokens);
+    console->println();
   }
 
   //
   // Clear EEPROM region
   //
-  clear_lcd_row(0);
+  lcd_clear_row(0);
   console->println();
   console->println();
   allPrintln("Clearing memory...");
@@ -262,7 +289,7 @@ void save_clk_config(char *s, char *p, signed char ttz, char *multiple_option_to
   //
   // Write "magic" patterns to indicate valid data follows
   //
-  clear_lcd_row(1);
+  lcd_clear_row(1);
   allPrintln("Writing header...");
   int ptr = 0;
   for (int x=0; x < n_ConfigPattern; x++) {
@@ -286,24 +313,21 @@ void save_clk_config(char *s, char *p, signed char ttz, char *multiple_option_to
 
   // copy options to fixed length misc_bytes buffer
   int cnt=0;
-  misc_bytes[cnt++] = ttz;			// copy time zone ttz etc. to fixed length buffer
-  // any additional options are provided in multiple_option_tokens as ' ' separated tokens
-  char *cptr = multiple_option_tokens;		// copy options to misc_bytes with ' ' mapped to 0
+  misc_bytes[cnt++] = ttz;			// Copy time zone ttz etc. to fixed length buffer
+
+  						// Copy any additional options provided in multiple_option_tokens
+						// to misc_bytes with option separator ' ' mapped to a 0 byte
+  char *cptr = multiple_option_tokens;
   while (*cptr != 0) {
-    while ((*cptr != 0)&&(*cptr == ' '))		// skip any ' ' before tokens
+    while ((*cptr != 0)&&(*cptr == ' '))	// SKIP any repeated ' ' separators
       cptr++;
-    if (!( (*cptr == id_TimeServer)     ||		// REQUIRE leading char of option
-	   (*cptr == id_pb_switch_gpio) ||		// string to be in set of id_XXXX
-	   (*cptr == id_HomeServer)     ||		// string to be in set of id_XXXX
-	   (*cptr == id_DimSchedule)    ||		// string to be in set of id_XXXX
-	   (*cptr == id_LED_select)     ||		// string to be in set of id_XXXX
-	   (*cptr == id_HOURS_mode)     ))
-      break;						// finish on invalid option type
-    while ((*cptr != 0)&&(*cptr != ' '))		// copy token
+    if ( ! is_valid_misc_option_id(*cptr) )	// REQUIRE leading char of misc option to be valid
+      break;					// FINISH option processing on invalid option type else
+    while ((*cptr != 0)&&(*cptr != ' '))	// COPY token i.e. leading char and optional parameters
       misc_bytes[cnt++] = *cptr++;
-    misc_bytes[cnt++] = 0;				// and write 0 after token
+    misc_bytes[cnt++] = 0;			// DELIMIT by writing 0 after each token
   }
-  misc_bytes[cnt++] = 0;
+  misc_bytes[cnt++] = 0;			// COMPLETE with final write 0 i.e. two consecutive 0 bytes uniquely mark end
 
   console->print("\n\rOption char*:    ");	// echo original options string (skip TZ byte)
   cptr = multiple_option_tokens;
@@ -321,9 +345,9 @@ void save_clk_config(char *s, char *p, signed char ttz, char *multiple_option_to
   //
   // Write...
   //
-  clear_lcd_row(0);
+  lcd_clear_row(0);
   allPrint("Writing to eeprom:");
-  clear_lcd_row(1);
+  lcd_clear_row(1);
   for (int i = 0; i < WIFI_parms_size; ++i) {
     EEPROM.write(ptr++, ssid_Cstr[i]);
     delay(1);
@@ -353,26 +377,26 @@ void save_clk_config(char *s, char *p, signed char ttz, char *multiple_option_to
 
 #if defined( __extra_bytes_displayed__ )
 
-  clear_lcd_row(0); allPrintln("Summary");       clear_lcd_row(1);
+  lcd_clear_row(0); allPrintln("Summary");       lcd_clear_row(1);
 
   DelSec( 1 );
   console->println();
-  clear_lcd_row(0); allPrintln("WiFi SSID");     clear_lcd_row(1); allPrint(" "); allPrintln(ssid_Cstr);
+  lcd_clear_row(0); allPrintln("WiFi SSID");     lcd_clear_row(1); allPrint(" "); allPrintln(ssid_Cstr);
 
   DelSec( 1 );
   console->println();
-  clear_lcd_row(0); allPrintln("WiFi Password"); clear_lcd_row(1); allPrint(" "); allPrintln(pass_Cstr);
-                                                 clear_lcd_row(2); allPrint(" "); allPrintln(ssid_Cstr);
+  lcd_clear_row(0); allPrintln("WiFi Password"); lcd_clear_row(1); allPrint(" "); allPrintln(pass_Cstr);
+                                                 lcd_clear_row(2); allPrint(" "); allPrintln(ssid_Cstr);
   DelSec( 1 );
   console->println();
-  clear_lcd_row(0); allPrintln("Time Zone");     clear_lcd_row(1); allPrint(" "); allPrintlnN(int(ttz));
-                                                 clear_lcd_row(2); allPrint(" "); allPrintln(pass_Cstr);
-                                                 clear_lcd_row(3); allPrint(" "); allPrintln(ssid_Cstr);
+  lcd_clear_row(0); allPrintln("Time Zone");     lcd_clear_row(1); allPrint(" "); allPrintlnN(int(ttz));
+                                                 lcd_clear_row(2); allPrint(" "); allPrintln(pass_Cstr);
+                                                 lcd_clear_row(3); allPrint(" "); allPrintln(ssid_Cstr);
   DelSec( 1 );
   console->println();
-  clear_lcd_row(0); allPrintln("Options");       clear_lcd_row(3);
-                                                 clear_lcd_row(1); allPrint(" "); allPrintln(multiple_option_tokens);
-                                                 clear_lcd_row(2); allPrint(" ");
+  lcd_clear_row(0); allPrintln("Options");       lcd_clear_row(3);
+                                                 lcd_clear_row(1); allPrint(" "); allPrintln(multiple_option_tokens);
+                                                 lcd_clear_row(2); allPrint(" ");
   DelSec( 1 );
   console->println();
 #endif
