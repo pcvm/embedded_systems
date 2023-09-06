@@ -5,8 +5,8 @@
 #define n7seg_digits 4
 #define n7seg_digitsM1 (n7seg_digits-1)
 
+#include <Adafruit_GFX.h>
 #include <Adafruit_LEDBackpack.h>
-//#include <Adafruit_GFX.h>
 
 // set Adafruit driver address
 #define AddressOf7segDisplay 0x70
@@ -68,8 +68,8 @@ void display_7seg_progress_update() {
 // Clock use of indicator "dots"
 // - use upper dot to flag an NTP sync is in progress (the display is
 //   actually upside down so this is in fact the lower left dot!)
-#define flag_NTP_sync_active StatusBits7seg_setBits( StatusBits7seg_bd )
-#define flag_NTP_sync_done   StatusBits7seg_clrBits( StatusBits7seg_bd )
+void flag_NTP_sync_active() { StatusBits7seg_setBits( StatusBits7seg_bd ); }
+void flag_NTP_sync_done()   { StatusBits7seg_clrBits( StatusBits7seg_bd ); }
 
 // Brightness can be set 0..15, 15=default=MAX
 #define max7segBrightness 15
@@ -119,9 +119,10 @@ int manage_display_brightness(int hours) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// (note: should make these support functions for time_s12 and have PM_remove/restore_12HFLAG() fns)
 #define PM_ENCODE_12HFLAG( x ) ( (x) | 0x80      )
 #define PM_REMOVE_12HFLAG( x ) ( (x) & 0x7f      )
-#define PM_SYMBOL_VISIBLE( x ) (((x) & 0x80) != 0)
+#define IS_PM_12HFLAG_SET( x ) (((x) & 0x80) != 0)
 
 // display_7seg_4digits() displays the time string data on a 7seg 4digit display
 //
@@ -134,7 +135,7 @@ void display_7seg_4digits( char* day_time, int the_colon, int digitsChange )  {
     else           StatusBits7seg_clrBits( StatusBits7seg_cc );
 
     // day_time[0] is the left most char encoded with flag to display PM
-    if (PM_SYMBOL_VISIBLE(day_time[0])) StatusBits7seg_setBits( StatusBits7seg_td );
+    if (IS_PM_12HFLAG_SET(day_time[0])) StatusBits7seg_setBits( StatusBits7seg_td );
     else                                StatusBits7seg_clrBits( StatusBits7seg_td );
 
     // day_time[0] may also be omitted when it is blank (leading 0 was suppressed)
@@ -172,7 +173,7 @@ void display_7seg_Mchar_NdigCounter(int x, char mode) {
   char x_str[12];
   if ( mode != 0) x_str[0]=mode;
   sprintf(x_str,"%4d",x);
-  display_7seg_str4(0,x_str);
+  display_7seg_str4(x_str);
 }
 
 void display_7seg_NdigitCounter(int x) {
@@ -187,7 +188,7 @@ void display_7seg_NdigitCounterInit(int ndigits) {
   StatusBits7seg_clrBits( StatusBits7seg_cc );
 
   NdigitCounter7seg = ndigits;
-  display_7seg_str4(0,(char*) "    ");
+  display_7seg_str4((char*) "    ");
 }
 
 void display_7segmentSetFlags( unsigned char flagsBits )  {
@@ -204,11 +205,14 @@ void display_7segmentSetFlags( unsigned char flagsBits )  {
 
 #include "display_font_data.h"
 
-// load_7seg_char() updates an internal buffer but does not display result
+// load_7seg_char() updates an internal buffer but does not update the display
+//                  Uses our special "7-seg" ascii font in mapASCIIto7seg[]
+//
 void load_7seg_char( int location, char ch ) {
   int x = ch;
-  if ((x > '~')||(x < ' ')) x=0;		// map ascii to table address used here
-  else x = x - ' ';
+  if ((x > '~')||(x < ' ')) x=0;		// map ascii to SAFE table address used here i.e.
+  else x = x - ' ';				// {' '..'~'} is mapped to {0..('~'-' ')}, and anything else becomes 0
+
   location = 0x3 & location;			// map 0,1,2,3 to 0,1,3,4 (as used by display)
   if (location>1) location += 1;
 
@@ -218,34 +222,41 @@ void load_7seg_char( int location, char ch ) {
     return;
   }
 
-  the7segDisplay.writeDigitRaw(location, mapASCIIto7seg[x]);  
+  the7segDisplay.writeDigitRaw(location, mapASCIIto7seg[x]);	// x in a SAFE table address
 }
 
-// display_7seg_str4() updates internal buffers and then displays result
-void display_7seg_str4( int start, char* ptr ) {
-  the7segDisplay.clear();	// clear buffer
-  for (int p=0; p<4-start;p++)	// load buffer
-    load_7seg_char( p+start, *(ptr+p) );
-  the7segDisplay.writeDisplay();// display buffer
+// display_7seg_str4() prints up to 4 chars, left justified
+void display_7seg_str4( char* ptr ) {
+  //  the7segDisplay.clear();	// clear buffer
+  for (int p=0; p<4; p++){	// load buffer
+    if (*(ptr+p) == 0) break;		// (load up to 4 chars)
+    load_7seg_char( p, *(ptr+p) );
+  }
+  the7segDisplay.writeDisplay();
 }
 
 // ticker_7seg_str4() provides a ticker tape text display
 void delay_with_time_keeping(int);
 //
+const int MAX_LENGTH_TICKER_STR = 40;
 void ticker_7seg_str4( char* msg, char marker, int delay_default, int delay_marker ) {
   int hlength = strlen(msg);			// display message scrolling horizontally
+
+  if (hlength>MAX_LENGTH_TICKER_STR)
+    hlength = MAX_LENGTH_TICKER_STR;
+
   for (int p=0;p<hlength-n7seg_digitsM1;p++) {	// with delays
-    display_7seg_str4(0,msg+p);
-    if ((marker!=0)&&(*(msg+p)==marker)) delay_with_time_keeping(delay_marker);
-    else                                 delay_with_time_keeping(delay_default);
+    display_7seg_str4(msg+p);
+    if ((marker!=0)&&(*(msg+p)==marker)) delay( delay_marker );  //delay_with_time_keeping(delay_marker);
+    else                                 delay( delay_default ); //delay_with_time_keeping(delay_default);
   }
 }
 
 // display_7seg_int3() writes a 0..99 integer into the RHS 3 char locations
 void display_7seg_int3( int value ) {
-  char x[4];
+  char x[5];		// {' '}, {' ','-'}, {['0'-'9']}, {['0'-'9']}, {NULL}
   if (value >  99) value=99;
   if (value < -99) value=-99;
-  sprintf( x, "%3d", value);
-  display_7seg_str4( 1, x);
+  sprintf( x, " %3d", value);
+  display_7seg_str4( x );
 }

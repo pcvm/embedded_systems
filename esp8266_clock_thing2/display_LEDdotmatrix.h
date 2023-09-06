@@ -1,10 +1,14 @@
 /* -*- mode: c++; -*- */
 
 // File display_LEDdotmatrix.h is based on sample code taken from sample
-// program MD_MAX72xx_PrintText.ino
+// program MD_MAX72xx_PrintText.ino, with specifying the type of LED array
+// code adapted from MD_MAX72xx_Dynamic_HW.ino
 //
 // The LED dot matrix driver object is instantiated as object mx, and then the
 // "setup" function is mx.begin(). There is also a "loop" function mx_loop().
+//
+// Note: I recently discovered this tutorial example using the same library:
+//       https://lastminuteengineers.com/max7219-dot-matrix-arduino-tutorial/
 
 void mx_loop();
 
@@ -21,15 +25,41 @@ void mx_loop();
 #define PRINT(s, v) { Serial.print(F(s)); Serial.print(v); }
 
 // Define the number of devices we have in the chain and the hardware interface
-#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
+// for two types of hardware (purchased so far)
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW	// "normal" PCB holding 4 tightly stacked 8x8 dm modules
+						// with a surface mount MAX7219 IC under each display module
+						// -> corresponds to mx_configure(3) and our default
+#define HARDWARE_4x88 MD_MAX72XX::GENERIC_HW	// hand soldered individual 8x8 modules with adjacent MAX7219
+						// driver DIP ICs located above the LED array
+						// -> corresponds to mx_configure(1)
 #define MAX_DEVICES 4 // 11
 
 #define CLK_PIN   D5 // or SCK
 #define DATA_PIN  D7 // or MOSI
 #define CS_PIN    D8 // or SS
 
-// SPI hardware interface
+// Instantiate a driver using the SPI hardware interface
+//
+// . SCK, MOSI and SS defined above
+// . Instantiate driver with default HARDWARE_TYPE and then use mx.setModuleType() for run-time choice
+//
 MD_MAX72XX mx = MD_MAX72XX(HARDWARE_TYPE, CS_PIN, MAX_DEVICES);
+//
+void mx_configure( int id, int verbose ) {
+  MD_MAX72XX::moduleType_t mod;
+
+  if ( (id<0) || (id>3) ) id = 3;	// default is FC16_HW
+  if (verbose!=0) Serial.print("    > LED array subtype: ");
+  switch (id) {
+  case 0: mod = MD_MAX72XX::PAROLA_HW;    if (verbose!=0) Serial.printf("%d Parola\n\r", id);    break;
+  case 1: mod = MD_MAX72XX::GENERIC_HW;   if (verbose!=0) Serial.printf("%d Generic\n\r", id);   break;
+  case 2: mod = MD_MAX72XX::ICSTATION_HW; if (verbose!=0) Serial.printf("%d ICStation\n\r", id); break;
+  default:
+          mod = MD_MAX72XX::FC16_HW;      if (verbose!=0) Serial.printf("%d FC16\n\r", id);      break;
+  }
+  mx.setModuleType(mod);		// change the module type
+  return;
+}
 
 // Text parameters
 #define CHAR_SPACING  1 // pixels between characters

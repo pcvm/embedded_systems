@@ -98,16 +98,26 @@ void handleRoot() {
 		    (
   String( "<h3>Web configuration <br> of ClockThing! <br>\
 <form action='update' method='get'>WiFi Config <br>\
-&nbsp;SSID:                      <input type='text' name='" ) + c2css(id_wifi_ssid)      + String( "'> <br>\
-&nbsp;PASSWORD:                  <input type='text' name='" ) + c2css(id_wifi_password)  + String( "'> <br>\
-&nbsp;TimeZone (0=GMT,10=EST):   <input type='text' name='" ) + c2css(id_utc_offset)     + String( "'> <br>\
+&nbsp;SSID: \
+<input type='text' name='" ) + c2css(id_wifi_ssid)      + String( "'> <br>\
+&nbsp;PASSWORD: \
+<input type='text' name='" ) + c2css(id_wifi_password)  + String( "'> <br>\
+&nbsp;TimeZone (0=GMT,10=EST): \
+<input type='text' name='" ) + c2css(id_utc_offset)     + String( "'> <br>\
 &nbsp; <br>\
-Options (blank OK) <br>\
-&nbsp;Display dim schedule (D means dim 10pm-6am):      <input type='text' name='" )     + c2css(id_DimSchedule) + String( "'> <br>\
-&nbsp;Alt. ntp server:           <input type='text' name='" ) + c2css(id_TimeServer)     + String( "'> <br>\
-&nbsp;Alt. pb gpio n:            <input type='text' name='" ) + c2css(id_pb_switch_gpio) + String( "'> <br>\
-&nbsp;Test LED (ignore):         <input type='text' name='" ) + c2css(id_LED_select)     + String( "'> <br>\
-&nbsp;12 Hour mode:              <input type='text' name='" ) + c2css(id_HOURS_mode)     + String( "'> <br>\
+Options (blank means OK or no change) <br>\
+&nbsp;Display dim schedule (D means dim 10pm-6am): \
+<input type='text' name='" ) + c2css(id_DimSchedule)    + String( "'> <br>\
+&nbsp;Use GPS for time: \
+<input type='text' name='" ) + c2css(id_GPS_time)       + String( "'> <br>\
+&nbsp;Alt. ntp server: \
+<input type='text' name='" ) + c2css(id_TimeServer)     + String( "'> <br>\
+&nbsp;Alt. pb gpio n: \
+<input type='text' name='" ) + c2css(id_pb_switch_gpio) + String( "'> <br>\
+&nbsp;LED disp select (read docs 1st, else ignore): \
+<input type='text' name='" ) + c2css(id_LED_select)     + String( "'> <br>\
+&nbsp;12 Hour mode (empty means no change): \
+<input type='text' name='" ) + c2css(id_HOURS_mode)     + String( "'> <br>\
 <input type='submit' value='Submit'>\
 </form> </h3> <br>\
 Suggested dimming schedule is D <br>\
@@ -122,6 +132,7 @@ void handleUpdate() {
   String pwd            = wifi_server_main.arg(c2css(id_wifi_password));
   String utco           = wifi_server_main.arg(c2css(id_utc_offset));
   String opt_TimeServer = wifi_server_main.arg(c2css(id_TimeServer));
+  String opt_GPS_time   = wifi_server_main.arg(c2css(id_GPS_time));
   String opt_GpioN_pb   = wifi_server_main.arg(c2css(id_pb_switch_gpio));
   String opt_Dim_sched  = wifi_server_main.arg(c2css(id_DimSchedule));
   String opt_LED_select = wifi_server_main.arg(c2css(id_LED_select));
@@ -144,20 +155,29 @@ void handleUpdate() {
   // . group together option string values as ' ' separated tokens
   String multiple_options = "";
   if (opt_TimeServer.length()>0) multiple_options += id_TimeServer     + opt_TimeServer + ' ';
+
+  if (opt_GPS_time.length()>0)   multiple_options += id_GPS_time       + opt_GPS_time   + ' ';
+  else if ( is_system_using_GPS_source() )	// map no user input to mean keep any existing GPS choice
+                                 multiple_options += id_GPS_time       + '1'            + ' ';
+
   if (opt_GpioN_pb.length()>0)   multiple_options += id_pb_switch_gpio + opt_GpioN_pb   + ' ';
 
   if (opt_Dim_sched.length()>0)  multiple_options += id_DimSchedule    + opt_Dim_sched  + ' ';
+
   if (opt_LED_select.length()>0) multiple_options += id_LED_select     + opt_LED_select + ' ';
+  else if ( is_system_using_dots_led() )		// map no user input to mean keep existing choice
+                                 multiple_options += id_LED_select     + '1'            + ' ';
+
   if (opt_HOURS_mode.length()>0) multiple_options += id_HOURS_mode     + opt_HOURS_mode + ' ';
 
 							// save config (multiple_options checked in save_clk_config())
   save_clk_config(ssid_ptr, pwd_ptr, byte__utc_offset, (char*) multiple_options.c_str(), beloud);
 
-  clear_lcd_row(0);
+  lcd_clear_row(0);
   allPrintln("Restart");
   wifi_server_main.send(200, "text/html", "<p> <h1>Thank you!</h1><p> <h1>Please cycle power now</h1>");
   DelSec( 5 );
-  clear_lcd_row(0);
+  lcd_clear_row(0);
   allPrintln("Restarting");
 
   // From
@@ -187,12 +207,20 @@ char ssid_number_AP[ 4 + 1 ];
 String config_help;
 //
 void enable_reconfigure_via_wifi( int new_mode ) {
+  if ( try_switch_to_doing_config_using_wifi( new_mode ) ) {
+    Serial.println("Enabling reconfigure");	// main polling loop will support using LAN/or/AP for config
+  } else {
+    Serial.println("Error - called enable_reconfigure_via_wifi() with bad arg");
+    return;					// no change to system operation
+  }
 
-  lock_system_mode = new_mode;		// configures main polling loop to
-					// support using LAN/or/AP for config
-
-  if (using_LAN_for_config()) configure_IP_str = IP_as_string;
-  else                        configure_IP_str = "192.168.4.1";
+  if (is_system_doing_config_using_wifi_LocalLan()) {
+					// network must be already enabled to reach here
+    configure_IP_str = IP_as_string;
+  } else {
+    update_network_status_for_new_AP();	// network will be enabled as AP
+    configure_IP_str = "192.168.4.1";
+  }
 
   config_help = String("    Config at http://") + configure_IP_str + "/ ";
   console->printf( "\n\rSet message string = [%d][", config_help.length() );
@@ -204,7 +232,7 @@ void enable_reconfigure_via_wifi( int new_mode ) {
   // create a unique tmp_ssid by appending 4 hex chars from MAC to config_ssid
   char tmp_ssid[ strlen(config_ssid)     + 4 + 1 ];
 
-  if (using_AP_for_config()) {
+  if (is_system_doing_config_using_wifi_APenabled()) {
     // create a unique tmp_ssid by appending 4 hex chars from MAC to config_ssid
     // (-pm- #1 duplicated code to remove)
     uint8_t mac[WL_MAC_ADDR_LENGTH];
@@ -228,7 +256,7 @@ void enable_reconfigure_via_wifi( int new_mode ) {
     lcd.setCursor(0, 3);
     allPrint("  ");
     allPrint(tmp_ssid);
-    display_7seg_str4(0,(char*) "Conf");
+    display_7seg_str4((char*) "Conf");
 
     MDNS.begin("clock");			// broadcast presence of "clock" on new AP
     MDNS.addService("clock", "tcp", 23);	// . for AP mode, need to advertise the telnet server
@@ -271,15 +299,15 @@ void polling_loop_for_web_configure() {
   allPrint(">");
   if (++client_loop_count >= lcd_COLS) {
     client_loop_count = 0;
-    clear_lcd_row(1);
+    lcd_clear_row(1);
     Serial.println();
   }
 
-  if (using_AP_for_config()) {
+  if (is_system_doing_config_using_wifi_APenabled()) {
     if (4 & client_loop_count)	// switch display updates at 4/2 Hz
-      display_7seg_str4(0,ssid_number_AP);
+      display_7seg_str4(ssid_number_AP);
     else
-      display_7seg_str4(0,(char*) "Conf");
+      display_7seg_str4((char*) "Conf");
   }
 
 #if defined( support_DotMatrix_DISPLAY )
@@ -290,7 +318,7 @@ void polling_loop_for_web_configure() {
   mdstr( (char*) config_help.c_str() + client_loop_count2 );
 #endif
 
-  process_network_services();
+  do_polling_for_active_services();
   process_user_enquiry();
 }
 

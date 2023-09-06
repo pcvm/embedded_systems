@@ -50,7 +50,7 @@ LiquidCrystal_I2C  lcd(0x27,En_pin,Rw_pin,Rs_pin,D4_pin,D5_pin,D6_pin,D7_pin);
 //
 #define lcd_setCursorSyncFlag           lcd.setCursor(lcd_COLS-2,1)
 //
-void clear_lcd_row( int r ) {           // overwrites text with ' ' chars
+void lcd_clear_row( int r ) {           // overwrites text with ' ' chars
   lcd.setCursor(0,r);
   for ( int i=0; i<lcd_COLS; i++ ) lcd.print(' ');
   lcd.setCursor(0,r);
