@@ -1,14 +1,19 @@
 # embedded_systems
 
-This work and play relates to some small personal projects and also my teaching in the area of embedded systems. Initial commits were in 2016 but all files reloaded in Dec-2018.
+This work and play relates to some small personal projects and also my teaching in the area of embedded systems. Initial commits were in 2016 with files reloaded in Dec-2018.
 
 * esp8266_clock_thing
   - A sequence of files that grow to form a digital clock using a 4 char 8x8 LED dot matrix display and a 4x20 LCD module, with NTP time sync and temperature display.
   - Developed as an aid for an embedded systems workshop.
 
-* esp8266_clock_thing2
-  - Latest clock source code plus user information. Some code for a https server is not used (lack of CPU power).
-  - The whole project has grown far beyond any initial plans and, even though code has been split into separate files to preserve some sanity, it really needs a major refacture (or rewrite). In defence, some of the display hardware and even software to decode NTP responses did not exist in the beginning. An option to input time from a GPS receiver is the next change...
+* esp8266_clock_thing2 (2022)
+  - Latest clock source code plus user information. Some code for a https server is not used (lack of CPU power) but reference time is now taken from an optional GPS source as well as the original NTP source.
+  - The whole project has grown far beyond any initial plans and, even though code has been split into separate files to preserve some sanity, it is "messy". In defence, some of the display hardware and even software to decode NTP responses did not exist when the early versions of this teaching demo began. Actually, it all began in 2000 with...
+
+* avr_clock_demo_2000
+  - An example of managing timer interrupts in C code on the ATMEL AT90S8515 (before Arduino existed)
+  - This provides a simplistic digital clock using a Hitachi type 2row/16column LCD module (this same module is a display mode for esp8266_clock_thing2 via an I2C link)
+  - coded in C around year 2000
 
 * emonTx_energy_monitor
   - A fork of the Atmel AVR control program for the open energy monitor (from 2016).
